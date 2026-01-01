@@ -1,5 +1,9 @@
 # 🌍 Vinted Geolocator
 
+![Version](https://img.shields.io/badge/version-1.1.2-blue?style=for-the-badge)
+![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
+![JavaScript](https://img.shields.io/badge/javascript-ES6+-yellow?style=for-the-badge&logo=javascript&logoColor=white)
+
 > Reveal hidden seller locations on Vinted and filter items by country with a beautiful, intuitive UI.
 
 ![Vinted Geolocator in action](https://greasyfork.s3.us-east-2.amazonaws.com/ki5j18r5lauiyjcpkksyycdf740u)
