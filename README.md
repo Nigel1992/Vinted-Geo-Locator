@@ -6,7 +6,8 @@
 
 > Reveal hidden seller locations on Vinted and filter items by country with a beautiful, intuitive UI.
 
-![Vinted Geolocator in action](https://greasyfork.s3.us-east-2.amazonaws.com/ki5j18r5lauiyjcpkksyycdf740u)
+<img width="1287" height="555" alt="image" src="https://github.com/user-attachments/assets/9825deca-036a-413e-ac92-5fe2165cf980" />
+
 
 ## ✨ Features
 
