@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Vinted Country & City Filter (client-side)
 // @namespace    https://greasyfork.org/en/users/1550823-nigel1992
-// @version      1.1.6
+// @version      1.1.7
 // @description  Adds a country and city indicator to Vinted items and allows client-side visual filtering by item location. The script uses Vinted’s public item API to retrieve country and city information. It does not perform purchases, send messages, or modify anything on Vinted servers.
 // @author       Nigel1992
 // @license      MIT
@@ -514,7 +514,7 @@
                     padding-top: 8px;
                     border-top: 1px solid #eee;
                 ">
-                    v1.1.6 • Jan 1, 2026
+                    v1.1.7 • Jan 1, 2026
                 </div>
             </div>
         `;
@@ -678,7 +678,8 @@
     ========================== */
 
     function scanItems() {
-        if (isPausedForCaptcha || isWaitingForEnglish || !englishCheckComplete) return;
+        // Don't scan if filter is disabled
+        if (!isFilterEnabled || isPausedForCaptcha || isWaitingForEnglish || !englishCheckComplete) return;
 
         const items = document.querySelectorAll(
             '[data-testid^="product-item"], [data-testid*="item"], a[href*="/items/"], [class*="ItemBox"], [class*="item-box"], [class*="feed-grid"] a[href*="/items/"], [class*="ProductCard"], [class*="product-card"]'
@@ -737,7 +738,8 @@
     ========================== */
 
     async function processQueue() {
-        if (isProcessing || isPausedForCaptcha || queue.length === 0 || isWaitingForEnglish || !englishCheckComplete) return;
+        // Don't process if filter is disabled
+        if (!isFilterEnabled || isProcessing || isPausedForCaptcha || queue.length === 0 || isWaitingForEnglish || !englishCheckComplete) return;
 
         isProcessing = true;
         const item = queue.shift();
@@ -844,18 +846,33 @@
     }
 
     function resetAllItems() {
-        // Reset all items to normal visibility when filter is disabled
+        // Reset all items to normal visibility and remove overlays when filter is disabled
         processedItems.forEach(item => {
             item.element.style.opacity = '1';
             item.element.style.filter = 'none';
             item.element.style.transition = 'opacity 0.3s ease, filter 0.3s ease';
+            
+            // Remove the country overlay
+            if (item.overlay && item.overlay.parentNode) {
+                item.overlay.remove();
+            }
         });
+        
+        // Clear processed items and queue
+        processedItems.clear();
+        queue.length = 0;
         
         // Update counters
         const matchNumberEl = document.getElementById('vinted-match-number');
         const totalNumberEl = document.getElementById('vinted-total-number');
+        const queueNumberEl = document.getElementById('vinted-queue-number');
         if (matchNumberEl) matchNumberEl.textContent = '-';
         if (totalNumberEl) totalNumberEl.textContent = '-';
+        if (queueNumberEl) queueNumberEl.textContent = '0';
+        
+        // Hide progress bar
+        const progressContainer = document.getElementById('vinted-progress-bar-container');
+        if (progressContainer) progressContainer.style.display = 'none';
     }
 
     function updateQueueStatus() {
