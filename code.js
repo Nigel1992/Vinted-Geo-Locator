@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Vinted Country & City Filter (client-side)
 // @namespace    https://greasyfork.org/en/users/1550823-nigel1992
-// @version      1.1.4
+// @version      1.1.5
 // @description  Adds a country and city indicator to Vinted items and allows client-side visual filtering by item location. The script uses Vinted’s public item API to retrieve country and city information. It does not perform purchases, send messages, or modify anything on Vinted servers.
 // @author       Nigel1992
 // @license      MIT
@@ -114,20 +114,35 @@
             try {
                 // Try to fetch the API to see if captcha is solved
                 const response = await fetch(
-                    `https://${location.hostname}/api/v2/items/1/details`
+                    `https://${location.hostname}/api/v2/items/1/details`,
+                    { credentials: 'include' }
                 );
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    // Check if we get the "not found" response (means captcha is solved)
-                    if (data.code === 104 || data.message_code === 'not_found' || data.item) {
-                        onCaptchaSolved();
+                // If we no longer get 403, captcha is solved
+                if (response.status !== 403) {
+                    const text = await response.text();
+                    try {
+                        const data = JSON.parse(text);
+                        // Check if we get the "not found" response or valid data (means captcha is solved)
+                        if (data.code === 104 || data.message_code === 'not_found' || data.item) {
+                            console.log('[Vinted Filter] Captcha solved! Response:', data);
+                            onCaptchaSolved();
+                            return;
+                        }
+                    } catch (parseError) {
+                        // If response is not JSON but status is OK, captcha might be solved
+                        if (response.ok) {
+                            console.log('[Vinted Filter] Captcha appears solved (non-JSON response)');
+                            onCaptchaSolved();
+                            return;
+                        }
                     }
                 }
             } catch (e) {
+                console.log('[Vinted Filter] Captcha check error:', e);
                 // Ignore errors, keep checking
             }
-        }, 2000); // Check every 2 seconds
+        }, 1500); // Check every 1.5 seconds
     }
 
     function onCaptchaSolved() {
@@ -446,7 +461,7 @@
                     padding-top: 8px;
                     border-top: 1px solid #eee;
                 ">
-                    v1.1.4 • Jan 1, 2026
+                    v1.1.5 • Jan 1, 2026
                 </div>
             </div>
         `;
