@@ -5,6 +5,19 @@ All notable changes to the Vinted Geolocator userscript will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.7] - 2026-01-01
+
+### Fixed
+- **Filter toggle now fully stops processing** when disabled
+- Scanning and queue processing halt immediately when filter is off
+- Country overlays are removed when filter is disabled
+- Queue and processed items are cleared when disabling
+
+### Changed
+- Cleaner browsing experience when filter is disabled (no tags or overlays)
+
+---
+
 ## [1.1.6] - 2026-01-01
 
 ### Added
