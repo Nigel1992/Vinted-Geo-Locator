@@ -5,6 +5,15 @@ All notable changes to the Vinted Geolocator userscript will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.8] - 2026-01-01
+
+### Fixed
+- **Captcha popup now auto-closes** when solved
+- Fixed detection of array response format `[{"code":104,...}]`
+- Popup closes automatically once captcha verification succeeds
+
+---
+
 ## [1.1.7] - 2026-01-01
 
 ### Fixed

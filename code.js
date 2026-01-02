@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Vinted Country & City Filter (client-side)
 // @namespace    https://greasyfork.org/en/users/1550823-nigel1992
-// @version      1.1.7
+// @version      1.1.8
 // @description  Adds a country and city indicator to Vinted items and allows client-side visual filtering by item location. The script uses Vinted’s public item API to retrieve country and city information. It does not perform purchases, send messages, or modify anything on Vinted servers.
 // @author       Nigel1992
 // @license      MIT
@@ -123,7 +123,11 @@
                 if (response.status !== 403) {
                     const text = await response.text();
                     try {
-                        const data = JSON.parse(text);
+                        let data = JSON.parse(text);
+                        // Handle array response: [{"code":104,...}]
+                        if (Array.isArray(data)) {
+                            data = data[0] || {};
+                        }
                         // Check if we get the "not found" response or valid data (means captcha is solved)
                         if (data.code === 104 || data.message_code === 'not_found' || data.item) {
                             console.log('[Vinted Filter] Captcha solved! Response:', data);
@@ -514,7 +518,7 @@
                     padding-top: 8px;
                     border-top: 1px solid #eee;
                 ">
-                    v1.1.7 • Jan 1, 2026
+                    v1.1.8 • Jan 1, 2026
                 </div>
             </div>
         `;
