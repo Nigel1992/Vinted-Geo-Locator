@@ -5,6 +5,21 @@ All notable changes to the Vinted Geolocator userscript will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-01-04
+
+### Added
+- **Country exclusion filter** - Replaced single-country selection with multi-country exclusion checkboxes
+- Check multiple countries to hide items from those locations
+- More flexible filtering - exclude unwanted countries instead of showing only one
+- Improved UI with scrollable country checkboxes grid
+- Updated description and version info
+
+### Changed
+- Filter logic now excludes selected countries instead of including only one
+- Status messages updated to reflect exclusion behavior
+- Match counter now shows "Shown Items" instead of "Matching Filter"
+- Session storage key changed from `vinted_filter_country` to `vinted_excluded_countries`
+
 ## [1.1.9] - 2026-01-04
 
 ### Added
