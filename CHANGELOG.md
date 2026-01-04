@@ -5,6 +5,19 @@ All notable changes to the Vinted Geolocator userscript will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-01-04
+
+### Added
+- **Item location caching** - Items' location data is now cached in localStorage to avoid repeated API requests
+- Cache never expires - once an item's location is known, it's stored permanently
+- Clear Cache button now also clears localStorage cache
+- Faster loading for previously seen items - no API calls needed
+
+### Technical
+- Cache keys use format `vinted_item_{itemId}` with JSON data containing country, city, and timestamp
+- Cache is checked before making API requests in processQueue function
+- Cached items process instantly with 100ms timeout instead of 1000ms
+
 ## [1.2.0] - 2026-01-04
 
 ### Added

@@ -1,10 +1,10 @@
 # 🌍 Vinted Geolocator
 
-![Version](https://img.shields.io/badge/version-1.2.0-blue?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-1.3.0-blue?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
 ![JavaScript](https://img.shields.io/badge/javascript-ES6+-yellow?style=for-the-badge&logo=javascript&logoColor=white)
 
-> Reveal hidden seller locations on Vinted and filter items by country with a beautiful, intuitive UI.
+> Reveal hidden seller locations on Vinted and filter items by country with intelligent caching and a beautiful, intuitive UI.
 
 <img width="1179" height="601" alt="image" src="https://github.com/user-attachments/assets/981cf27b-1a9a-4f2f-b696-aebcf60a2456" />
 
@@ -13,6 +13,7 @@
 
 - **🏳️ Country Flags** — Instantly see where each item ships from with flag badges
 - **🔍 Smart Filtering** — Filter items by country with a single click
+- **💾 Intelligent Caching** — Location data is cached forever, no repeated API calls
 - **📊 Live Stats** — Track matching items, total scanned, and queue progress
 - **🎨 Sleek UI** — Minimalist floating panel that stays out of your way
 - **⚡ Lightweight** — Pure JavaScript, no external dependencies
@@ -45,10 +46,11 @@
 ## 🎯 How It Works
 
 1. The script scans visible items on the page
-2. For each item, it fetches location data from Vinted's public API
-3. Country flags are added to item cards
-4. Use the floating panel to filter by your preferred country
-5. Non-matching items fade out, keeping your focus on relevant listings
+2. For each item, it first checks cached location data, then fetches from Vinted's API if needed
+3. Location data is cached forever to avoid repeated API calls
+4. Country flags are added to item cards
+5. Use the floating panel to filter by your preferred country
+6. Non-matching items fade out, keeping your focus on relevant listings
 
 ## ⚠️ Important Notes
 

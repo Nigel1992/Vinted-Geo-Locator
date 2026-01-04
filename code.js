@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Vinted Country & City Filter (client-side)
 // @namespace    https://greasyfork.org/en/users/1550823-nigel1992
-// @version      1.2.0
+// @version      1.3.0
 // @description  Adds a country and city indicator to Vinted items and allows client-side visual filtering by excluding selected countries. The script uses Vinted’s public item API to retrieve country and city information. It does not perform purchases, send messages, or modify anything on Vinted servers.
 // @author       Nigel1992
 // @license      MIT
@@ -69,6 +69,7 @@
 
     const processedItems = new Map();
     const queue = [];
+    const CACHE_PREFIX = 'vinted_item_';
 
     const countryToFlag = {
         netherlands: '🇳🇱',
@@ -563,7 +564,7 @@
                     padding-top: 8px;
                     border-top: 1px solid #eee;
                 ">
-                    v1.2.0 • Jan 4, 2026
+                    v1.3.0 • Jan 4, 2026
                 </div>
             </div>
         `;
@@ -664,6 +665,7 @@
             if (confirm('Clear all cached item data? This will re-process all items.')) {
                 processedItems.clear();
                 queue.length = 0;
+                clearItemCache();
                 updateStatusMessage('Cache cleared. Rescanning items...');
                 updateQueueStatus();
                 applyFilter();
@@ -773,6 +775,42 @@
     }
 
     /* =========================
+       Cache functions
+    ========================== */
+
+    function getCachedItem(itemId) {
+        try {
+            const cached = localStorage.getItem(CACHE_PREFIX + itemId);
+            return cached ? JSON.parse(cached) : null;
+        } catch (e) {
+            console.warn('Error reading from cache:', e);
+            return null;
+        }
+    }
+
+    function setCachedItem(itemId, country, city) {
+        try {
+            const data = { country: country.toLowerCase(), city, timestamp: Date.now() };
+            localStorage.setItem(CACHE_PREFIX + itemId, JSON.stringify(data));
+        } catch (e) {
+            console.warn('Error writing to cache:', e);
+        }
+    }
+
+    function clearItemCache() {
+        try {
+            const keys = Object.keys(localStorage);
+            keys.forEach(key => {
+                if (key.startsWith(CACHE_PREFIX)) {
+                    localStorage.removeItem(key);
+                }
+            });
+        } catch (e) {
+            console.warn('Error clearing cache:', e);
+        }
+    }
+
+    /* =========================
        API processing
     ========================== */
 
@@ -782,6 +820,32 @@
 
         isProcessing = true;
         const item = queue.shift();
+
+        // Check cache first
+        const cachedData = getCachedItem(item.id);
+        if (cachedData) {
+            // Use cached data
+            const country = cachedData.country;
+            const city = cachedData.city;
+            const flag = countryToFlag[country] || '🏳️';
+
+            item.country = country;
+            item.overlay.textContent = city
+                ? `${flag} ${country.charAt(0).toUpperCase() + country.slice(1)}, ${city}`
+                : `${flag} ${country.charAt(0).toUpperCase() + country.slice(1)}`;
+
+            // Enhanced overlay styling after loading
+            item.overlay.style.background = 'linear-gradient(135deg, rgba(76,175,80,0.95) 0%, rgba(56,142,60,0.95) 100%)';
+            item.overlay.style.color = 'white';
+            item.overlay.style.borderColor = '#4caf50';
+            item.overlay.style.fontSize = '10px';
+            item.overlay.style.padding = '5px 9px';
+
+            applyFilter();
+            updateQueueStatus();
+            setTimeout(() => (isProcessing = false), 100);
+            return;
+        }
 
         try {
             const response = await fetch(
@@ -817,6 +881,9 @@
                 item.overlay.textContent = city
                     ? `${flag} ${country}, ${city}`
                     : `${flag} ${country}`;
+
+                // Cache the data
+                setCachedItem(item.id, country, city);
 
                 // Enhanced overlay styling after loading
                 item.overlay.style.background = 'linear-gradient(135deg, rgba(76,175,80,0.95) 0%, rgba(56,142,60,0.95) 100%)';
