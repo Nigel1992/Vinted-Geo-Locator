@@ -68,6 +68,8 @@
     let englishCheckComplete = false;
     let darkMode = sessionStorage.getItem('vinted_dark_mode') === 'true';
     let countrySectionCollapsed = sessionStorage.getItem('vinted_country_collapsed') === 'true';
+    let isPaused = false;
+    let flaggedSellers = new Set(JSON.parse(localStorage.getItem('vinted_flagged_sellers') || '[]'));
 
     const processedItems = new Map();
     const queue = [];
@@ -236,6 +238,7 @@
                 </div>
                 <div style="display: flex; gap: 4px;">
                     <button id="vinted-dark-toggle" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #666; padding: 4px 8px; border-radius: 4px; transition: background 0.2s;" title="Toggle dark mode">${darkMode ? '☀️' : '🌙'}</button>
+                    <button id="vinted-pause-toggle" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #666; padding: 4px 8px; border-radius: 4px; transition: background 0.2s;" title="${isPaused ? 'Resume processing' : 'Pause processing'}">${isPaused ? '▶' : '⏸'}</button>
                     <button id="vinted-toggle-menu" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #666; padding: 4px 8px; border-radius: 4px; transition: background 0.2s;" title="Minimize (Alt+V)">−${hiddenCount > 0 ? ` (${hiddenCount})` : ''}</button>
                 </div>
             </div>
@@ -717,6 +720,21 @@
             document.getElementById('vinted-filter-menu').remove();
         });
 
+        // Pause/Resume toggle
+        const pauseBtn = document.getElementById('vinted-pause-toggle');
+        pauseBtn.addEventListener('click', () => {
+            isPaused = !isPaused;
+            pauseBtn.textContent = isPaused ? '▶' : '⏸';
+            pauseBtn.title = isPaused ? 'Resume processing' : 'Pause processing';
+            if (isPaused) {
+                updateStatusMessage('⏸ Paused');
+            } else {
+                updateStatusMessage('▶ Resuming...');
+                setTimeout(() => updateStatusMessage('Processing items...'), 800);
+                applyFilter();
+            }
+        });
+
         // Country section collapse toggle
         document.getElementById('vinted-toggle-countries').addEventListener('click', () => {
             countrySectionCollapsed = !countrySectionCollapsed;
@@ -1013,6 +1031,48 @@
         }
     }
 
+    // Flagged seller badge handling
+    function updateSellerFlagBadge(item) {
+        if (!item?.element || !item?.seller) return;
+        let badge = item.element.querySelector('.vinted-flag-badge');
+        const isFlagged = flaggedSellers.has(item.seller);
+        if (!badge) {
+            badge = document.createElement('button');
+            badge.className = 'vinted-flag-badge';
+            badge.style.cssText = `
+                position: absolute;
+                top: 36px;
+                left: 8px;
+                background: ${isFlagged ? 'linear-gradient(135deg, #ffb74d 0%, #ff9800 100%)' : 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,249,250,0.95) 100%)'};
+                color: ${isFlagged ? 'white' : '#333'};
+                border: 2px solid ${isFlagged ? '#ff9800' : '#007782'};
+                padding: 3px 7px;
+                font-size: 11px;
+                border-radius: 8px;
+                cursor: pointer;
+                z-index: 12;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            `;
+            badge.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (flaggedSellers.has(item.seller)) {
+                    flaggedSellers.delete(item.seller);
+                } else {
+                    flaggedSellers.add(item.seller);
+                }
+                localStorage.setItem('vinted_flagged_sellers', JSON.stringify(Array.from(flaggedSellers)));
+                updateSellerFlagBadge(item);
+            });
+            item.element.style.position = 'relative';
+            item.element.appendChild(badge);
+        }
+        badge.textContent = isFlagged ? '🚩' : '🏷️';
+        badge.title = (isFlagged ? 'Unflag seller ' : 'Flag seller ') + (item.seller || '');
+        badge.style.background = isFlagged ? 'linear-gradient(135deg, #ffb74d 0%, #ff9800 100%)' : 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,249,250,0.95) 100%)';
+        badge.style.borderColor = isFlagged ? '#ff9800' : '#007782';
+    }
+
     /* =========================
        Duplicate Detection
     ========================== */
@@ -1087,8 +1147,8 @@
     ========================== */
 
     function scanItems() {
-        // Don't scan if filter is disabled
-        if (!isFilterEnabled || isPausedForCaptcha || isWaitingForEnglish || !englishCheckComplete) return;
+        // Don't scan if filter is disabled or paused
+        if (!isFilterEnabled || isPausedForCaptcha || isWaitingForEnglish || !englishCheckComplete || isPaused) return;
 
         const items = document.querySelectorAll(
             '[data-testid^="product-item"], [data-testid*="item"], a[href*="/items/"], [class*="ItemBox"], [class*="item-box"], [class*="feed-grid"] a[href*="/items/"], [class*="ProductCard"], [class*="product-card"]'
@@ -1132,11 +1192,37 @@
                 id: itemId,
                 element: el,
                 overlay: overlay,
-                country: ''
+                country: '',
+                seller: ''
             };
 
             processedItems.set(itemId, itemData);
-            queue.push(itemData);
+            // Load cached items instantly without queueing
+            const cachedData = getCachedItem(itemId);
+            if (cachedData) {
+                const country = cachedData.country;
+                const city = cachedData.city;
+                const flag = countryToFlag[country] || '🏳️';
+
+                itemData.country = country;
+                itemData.seller = cachedData.username || '';
+                itemData.overlay.textContent = city
+                    ? `${flag} ${country.charAt(0).toUpperCase() + country.slice(1)}, ${city}`
+                    : `${flag} ${country.charAt(0).toUpperCase() + country.slice(1)}`;
+
+                // Enhanced overlay styling after loading
+                itemData.overlay.style.background = 'linear-gradient(135deg, rgba(76,175,80,0.95) 0%, rgba(56,142,60,0.95) 100%)';
+                itemData.overlay.style.color = 'white';
+                itemData.overlay.style.borderColor = '#4caf50';
+                itemData.overlay.style.fontSize = '10px';
+                itemData.overlay.style.padding = '5px 9px';
+
+                updateSellerFlagBadge(itemData);
+                applyFilter();
+                updateQueueStatus();
+            } else {
+                queue.push(itemData);
+            }
         });
 
         updateQueueStatus();
@@ -1156,9 +1242,9 @@
         }
     }
 
-    function setCachedItem(itemId, country, city) {
+    function setCachedItem(itemId, country, city, username = '') {
         try {
-            const data = { country: country.toLowerCase(), city, timestamp: Date.now() };
+            const data = { country: country.toLowerCase(), city, username, timestamp: Date.now() };
             localStorage.setItem(CACHE_PREFIX + itemId, JSON.stringify(data));
         } catch (e) {
             console.warn('Error writing to cache:', e);
@@ -1183,8 +1269,8 @@
     ========================== */
 
     async function processQueue() {
-        // Don't process if filter is disabled
-        if (!isFilterEnabled || isProcessing || isPausedForCaptcha || queue.length === 0 || isWaitingForEnglish || !englishCheckComplete) return;
+        // Don't process if filter is disabled or paused
+        if (!isFilterEnabled || isProcessing || isPausedForCaptcha || queue.length === 0 || isWaitingForEnglish || !englishCheckComplete || isPaused) return;
 
         isProcessing = true;
         const item = queue.shift();
@@ -1198,6 +1284,7 @@
             const flag = countryToFlag[country] || '🏳️';
 
             item.country = country;
+            item.seller = cachedData.username || '';
             item.overlay.textContent = city
                 ? `${flag} ${country.charAt(0).toUpperCase() + country.slice(1)}, ${city}`
                 : `${flag} ${country.charAt(0).toUpperCase() + country.slice(1)}`;
@@ -1209,6 +1296,7 @@
             item.overlay.style.fontSize = '10px';
             item.overlay.style.padding = '5px 9px';
 
+            updateSellerFlagBadge(item);
             applyFilter();
             updateQueueStatus();
             setTimeout(() => (isProcessing = false), 100);
@@ -1243,15 +1331,17 @@
                 const data = await response.json();
                 const country = data?.item?.user?.country_title_local || 'Unknown';
                 const city = data?.item?.user?.city || '';
+                const username = data?.item?.user?.login || data?.item?.user?.username || '';
                 const flag = countryToFlag[country.toLowerCase()] || '🏳️';
 
                 item.country = country.toLowerCase();
+                item.seller = username;
                 item.overlay.textContent = city
                     ? `${flag} ${country}, ${city}`
                     : `${flag} ${country}`;
 
                 // Cache the data
-                setCachedItem(item.id, country, city);
+                setCachedItem(item.id, country, city, username);
 
                 // Enhanced overlay styling after loading
                 item.overlay.style.background = 'linear-gradient(135deg, rgba(76,175,80,0.95) 0%, rgba(56,142,60,0.95) 100%)';
@@ -1260,6 +1350,7 @@
                 item.overlay.style.fontSize = '10px';
                 item.overlay.style.padding = '5px 9px';
 
+                updateSellerFlagBadge(item);
                 applyFilter();
                 updateQueueStatus();
             }
@@ -1373,6 +1464,11 @@
         }
 
         // Update status message
+        if (isPaused) {
+            updateStatusMessage('⏸ Paused');
+            updateProgressBar();
+            return;
+        }
         if (queue.length > 0) {
             updateStatusMessage(`Processing ${queue.length} item${queue.length !== 1 ? 's' : ''}...`);
         } else if (processedItems.size > 0) {
