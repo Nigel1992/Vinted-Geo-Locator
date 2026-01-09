@@ -1078,8 +1078,17 @@
     ========================== */
 
     function generateDuplicateKey(item) {
-        // Create a key based on seller location and item title
+        // Prefer seller username when available; fallback to location label
+        if (item && item.seller) {
+            return `seller|${item.seller}`;
+        }
         return `${item.country || 'unknown'}|${item.overlay?.textContent || 'unknown'}`;
+    }
+
+    function shortUsername(name) {
+        if (!name) return '';
+        const trimmed = String(name).trim();
+        return trimmed.length > 14 ? trimmed.slice(0, 13) + '…' : trimmed;
     }
 
     function detectDuplicates() {
@@ -1122,6 +1131,10 @@
                             item.element.style.position = 'relative';
                             item.element.appendChild(duplicateBadge);
                         }
+                        // Always update label/title to reflect current seller
+                        const label = item.seller ? `👤 ${shortUsername(item.seller)}` : '👤';
+                        duplicateBadge.textContent = label;
+                        duplicateBadge.title = item.seller ? `Same seller: ${item.seller}` : 'Same seller';
                     }
                 });
             }
