@@ -1059,7 +1059,6 @@
             `;
             badge.addEventListener('click', (e) => {
                 e.preventDefault();
-                e.stopPropagation();
                 if (flaggedSellers.has(item.seller)) {
                     flaggedSellers.delete(item.seller);
                 } else {
