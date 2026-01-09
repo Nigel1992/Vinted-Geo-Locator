@@ -1116,12 +1116,13 @@
                             || item.element.querySelector('img')?.parentElement
                             || item.element;
                         
-                        let duplicateBadge = item.element.querySelector('.vinted-duplicate-badge');
+                        // Search for existing badge in both locations
+                        let duplicateBadge = imageContainer.querySelector('.vinted-duplicate-badge')
+                            || item.element.querySelector('.vinted-duplicate-badge');
+                        
                         if (!duplicateBadge) {
                             duplicateBadge = document.createElement('div');
                             duplicateBadge.className = 'vinted-duplicate-badge';
-                            duplicateBadge.textContent = '👤';
-                            duplicateBadge.title = 'Same seller';
                             duplicateBadge.style.cssText = `
                                 position: absolute;
                                 bottom: 8px;
@@ -1137,15 +1138,11 @@
                                 font-weight: 600;
                                 backdrop-filter: saturate(120%) blur(1px);
                             `;
-                            // Position relative on the image container
-                            if (imageContainer && imageContainer !== item.element) {
-                                imageContainer.style.position = imageContainer.style.position || 'relative';
-                                imageContainer.appendChild(duplicateBadge);
-                            } else {
-                                item.element.style.position = 'relative';
-                                item.element.appendChild(duplicateBadge);
-                            }
+                            // Append to image container and set position
+                            imageContainer.style.position = imageContainer.style.position || 'relative';
+                            imageContainer.appendChild(duplicateBadge);
                         }
+                        
                         // Always update label/title to reflect current seller
                         const label = item.seller ? `👤 ${shortUsername(item.seller)}` : '👤';
                         duplicateBadge.textContent = label;
