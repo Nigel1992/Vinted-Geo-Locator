@@ -1,3 +1,12 @@
+## [1.4.2] - 2026-01-17
+
+### Added
+- Split the menu into **Main** and **Settings** tabs with persistent active tab across sessions.
+- Added a subtle fade/slide animation when switching tabs for smoother UX.
+
+### Changed
+- Captcha popup now auto-opens on 403 and auto-closes immediately on a 200 response, with a single alert to avoid spam.
+
 ## [1.4.1.1] - 2026-01-10
 
 ### Changed

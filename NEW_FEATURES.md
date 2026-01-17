@@ -1,5 +1,11 @@
 # 🎉 New Features Added (v1.3.0+)
 
+## New in v1.4.2
+
+- **Tabbed Main/Settings layout** — cleaner separation of controls with active tab remembered across sessions.
+- **Subtle tab switch animation** — fade/slide effect when changing tabs for smoother navigation.
+- **Captcha flow polish** — popup auto-opens on 403 and closes as soon as a 200 response is detected, with a single alert to prevent spam.
+
 ## GUI Enhancements
 
 ### 1. 🌙 Dark Mode Toggle
@@ -107,5 +113,6 @@ Added new counter display:
 
 ## Version History
 
+- **v1.4.2**: Tabbed Main/Settings UI, tab animations, captcha auto-open/close polish
 - **v1.3.0+**: Added all above features
 - **v1.3.0**: Original release with basic filtering
